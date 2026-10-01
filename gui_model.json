@@ -1,0 +1,67 @@
+{
+ "features": [
+  "radius_worst",
+  "texture_worst",
+  "concave points_worst",
+  "concavity_worst",
+  "smoothness_worst",
+  "symmetry_worst"
+ ],
+ "intercept": -0.8490763925383382,
+ "stats": {
+  "radius_worst": {
+   "min": 7.93,
+   "max": 36.04,
+   "benign_mean": 13.37980112044818,
+   "malig_mean": 21.134811320754718,
+   "mean": 16.36611267605633,
+   "scale": 4.923743397420517,
+   "coef": 3.7095173750029358
+  },
+  "texture_worst": {
+   "min": 12.02,
+   "max": 49.54,
+   "benign_mean": 23.51507002801121,
+   "malig_mean": 29.318207547169813,
+   "mean": 25.844436619718312,
+   "scale": 6.045676163131559,
+   "coef": 1.2329319770815614
+  },
+  "concave points_worst": {
+   "min": 0.0,
+   "max": 0.291,
+   "benign_mean": 0.07444434453781512,
+   "malig_mean": 0.1822373113207547,
+   "mean": 0.11527882863849767,
+   "scale": 0.06598852211371556,
+   "coef": 1.2898185081568545
+  },
+  "concavity_worst": {
+   "min": 0.0,
+   "max": 1.252,
+   "benign_mean": 0.16623772268907563,
+   "malig_mean": 0.4506055660377358,
+   "mean": 0.27382326760563375,
+   "scale": 0.20794259826552294,
+   "coef": 0.3261233600442344
+  },
+  "smoothness_worst": {
+   "min": 0.07117,
+   "max": 0.2226,
+   "benign_mean": 0.12495949579831933,
+   "malig_mean": 0.1448452358490566,
+   "mean": 0.13223962441314535,
+   "scale": 0.023479785769146992,
+   "coef": 0.48124092985784883
+  },
+  "symmetry_worst": {
+   "min": 0.1565,
+   "max": 0.6638,
+   "benign_mean": 0.27024593837535016,
+   "malig_mean": 0.32346792452830186,
+   "mean": 0.2907626760563381,
+   "scale": 0.06321249238700913,
+   "coef": 0.3338666439554463
+  }
+ }
+}
