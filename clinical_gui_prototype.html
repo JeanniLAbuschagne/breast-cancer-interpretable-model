@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OncoAssist: Tumour Classification Support</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#f4f1ea; --panel:#ffffff; --ink:#1f2a30; --muted:#6b7780;
+    --line:#e3ddd1; --accent:#264653; --teal:#2a9d8f; --amber:#e9b949; --coral:#e76f51;
+    --shadow:0 1px 3px rgba(31,42,48,.06),0 8px 24px rgba(31,42,48,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+    line-height:1.5;padding:24px;min-height:100vh;
+    background-image:radial-gradient(circle at 100% 0,rgba(42,157,143,.05),transparent 40%);}
+  .wrap{max-width:1080px;margin:0 auto;}
+  header{display:flex;align-items:baseline;justify-content:space-between;
+    padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:24px;flex-wrap:wrap;gap:8px}
+  .brand{font-family:'Fraunces',serif;font-size:30px;font-weight:600;color:var(--accent);letter-spacing:-.01em}
+  .brand span{color:var(--teal)}
+  .tagline{font-size:13px;color:var(--muted)}
+  .badge{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--coral);background:#fbe9e3;padding:4px 10px;border-radius:20px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:840px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px;box-shadow:var(--shadow)}
+  .card h2{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin-bottom:4px}
+  .card .sub{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+  .field{margin-bottom:17px}
+  .field .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+  .field label{font-size:13px;font-weight:600}
+  .field .val{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--accent)}
+  .field .hint{font-size:11px;color:var(--muted);margin-top:3px}
+  .track{position:relative;height:26px;display:flex;align-items:center}
+  input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:5px;
+    background:var(--line);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;
+    border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;
+    background:var(--accent);cursor:pointer;border:3px solid #fff}
+  .marker{position:absolute;top:-3px;width:2px;height:11px;border-radius:2px}
+  .mk-b{background:var(--teal)} .mk-m{background:var(--coral)}
+  .legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:2px}
+  .legend i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+  /* gauge */
+  .gauge-wrap{text-align:center;margin:4px 0 8px}
+  .verdict{font-family:'Fraunces',serif;font-size:30px;font-weight:600;margin-top:6px;transition:color .3s}
+  .prob{font-size:13px;color:var(--muted)}
+  .band-flag{margin-top:14px;border-radius:10px;padding:12px 14px;font-size:13px;display:none}
+  .band-flag.show{display:block}
+  .band-flag b{display:block;margin-bottom:2px}
+  .review{background:#fdf6e3;border:1px solid #f0e2b0;color:#8a6d1f}
+  .clear-b{background:#e7f5f2;border:1px solid #bfe6df;color:#1d6b60}
+  .clear-m{background:#fbe9e3;border:1px solid #f3cebf;color:#a8442a}
+  /* contributions */
+  .why{margin-top:20px}
+  .why h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:12px}
+  .contrib{margin-bottom:11px}
+  .contrib .crow{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px}
+  .contrib .cname{font-weight:600}
+  .barbg{height:9px;background:var(--line);border-radius:5px;position:relative;overflow:hidden}
+  .barfill{position:absolute;top:0;height:100%;border-radius:5px;transition:width .35s,background .35s;left:50%}
+  .barzero{position:absolute;left:50%;top:-2px;width:1px;height:13px;background:#c3bcae}
+  .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .btn{flex:1;min-width:130px;padding:11px;border-radius:9px;border:1px solid var(--line);
+    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:#fff;transition:.15s}
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.ghost{color:var(--muted)}
+  .log{margin-top:14px;font-size:12px;color:var(--muted);min-height:18px}
+  .log.done{color:var(--teal);font-weight:600}
+  .preset{display:flex;gap:8px;margin-bottom:16px}
+  .preset button{flex:1;padding:8px;font-size:12px;font-weight:600;border-radius:8px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--muted)}
+  .preset button:hover{border-color:var(--accent);color:var(--accent)}
+  footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--coral)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">Onco<span>Assist</span></div>
+      <div class="tagline">Interpretable tumour classification · decision support for pathology review</div>
+    </div>
+    <div class="badge">Prototype · second-reader only</div>
+  </header>
+
+  <div class="grid">
+    <!-- INPUT PANEL -->
+    <div class="card">
+      <h2>Nucleus measurements</h2>
+      <div class="sub">Auto-populated from image analysis. Adjust to explore. Markers show typical benign (teal) vs. malignant (coral) values.</div>
+      <div class="preset">
+        <button onclick="loadPreset('benign')">Load benign example</button>
+        <button onclick="loadPreset('malig')">Load malignant example</button>
+        <button onclick="loadPreset('border')">Load borderline case</button>
+      </div>
+      <div id="fields"></div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div class="card">
+      <h2>Model assessment</h2>
+      <div class="sub">Six-feature logistic regression · threshold 0.40, selected on training data (out-of-fold).</div>
+      <div class="gauge-wrap">
+        <svg width="240" height="138" viewBox="0 0 240 138">
+          <path d="M20 128 A100 100 0 0 1 220 128" fill="none" stroke="#e3ddd1" stroke-width="16" stroke-linecap="round"/>
+          <path id="arc" d="" fill="none" stroke="#2a9d8f" stroke-width="16" stroke-linecap="round"/>
+          <line id="needle" x1="120" y1="128" x2="120" y2="44" stroke="#1f2a30" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="120" cy="128" r="6" fill="#1f2a30"/>
+        </svg>
+        <div class="verdict" id="verdict">...</div>
+        <div class="prob" id="prob">Probability of malignancy: ...</div>
+      </div>
+      <div class="band-flag" id="flag"></div>
+
+      <div class="why">
+        <h3>Why: what drove this assessment</h3>
+        <div id="contribs"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" onclick="confirmCase()">Confirm assessment</button>
+        <button class="btn" onclick="override()">Override → mark benign</button>
+        <button class="btn" onclick="override(true)">Override → mark malignant</button>
+      </div>
+      <div class="log" id="log">No decision recorded yet.</div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Clinical-use disclaimer:</b> OncoAssist is a decision-support "second reader". It does not replace clinical judgement or confirmatory pathology.<br>
+    Cases in the uncertain band are routed for expert review. Every decision and override is logged for audit. Model trained on the Wisconsin Diagnostic Breast Cancer dataset.
+  </footer>
+</div>
+
+<script>
+// ---- Real fitted model (6-feature logistic regression) ----
+const MODEL={
+  intercept:-0.8490763925383382,
+  feats:[
+    {key:"radius_worst",name:"Worst radius",unit:"",coef:3.7095173750,mean:16.3661126,scale:4.9237434,min:7.93,max:36.04,b:13.38,m:21.13,tip:"Largest nucleus radius: size of the biggest cells"},
+    {key:"texture_worst",name:"Worst texture",unit:"",coef:1.2329319771,mean:25.8444366,scale:6.0456762,min:12.02,max:49.54,b:23.52,m:29.32,tip:"Variation in grey-scale: surface roughness"},
+    {key:"concave_pts_worst",name:"Worst concave points",unit:"",coef:1.2898185082,mean:0.1152788,scale:0.0659885,min:0,max:0.291,b:0.074,m:0.182,tip:"Number of concave indentations on the contour"},
+    {key:"concavity_worst",name:"Worst concavity",unit:"",coef:0.3261233600,mean:0.2738233,scale:0.2079426,min:0,max:1.252,b:0.166,m:0.451,tip:"Depth/severity of the concave portions"},
+    {key:"smoothness_worst",name:"Worst smoothness",unit:"",coef:0.4812409299,mean:0.1322396,scale:0.0234798,min:0.071,max:0.223,b:0.125,m:0.145,tip:"Local variation in radius length"},
+    {key:"symmetry_worst",name:"Worst symmetry",unit:"",coef:0.3338666440,mean:0.2907627,scale:0.0632125,min:0.156,max:0.664,b:0.270,m:0.323,tip:"Asymmetry of the nucleus shape"}
+  ]
+};
+const THRESH=0.40, LOW=0.20, HIGH=0.60;
+const PRESETS={
+  benign:[12.0,22.0,0.06,0.12,0.12,0.26],
+  malig:[24.0,28.0,0.20,0.50,0.15,0.34],
+  border:[16.5,25.0,0.13,0.27,0.14,0.30]
+};
+let vals=PRESETS.benign.slice();
+
+function sigmoid(z){return 1/(1+Math.exp(-z));}
+function predict(){
+  let z=MODEL.intercept, contribs=[];
+  MODEL.feats.forEach((f,i)=>{
+    const std=(vals[i]-f.mean)/f.scale;
+    const c=f.coef*std;
+    z+=c; contribs.push(c);
+  });
+  return {p:sigmoid(z),contribs};
+}
+
+function buildFields(){
+  const box=document.getElementById('fields'); box.innerHTML='';
+  MODEL.feats.forEach((f,i)=>{
+    const span=f.max-f.min, step=span/300;
+    const bPos=((f.b-f.min)/span)*100, mPos=((f.m-f.min)/span)*100;
+    const d=document.createElement('div'); d.className='field';
+    d.innerHTML=`
+      <div class="top"><label>${f.name}</label><span class="val" id="v${i}"></span></div>
+      <div class="track">
+        <input type="range" min="${f.min}" max="${f.max}" step="${step}" value="${vals[i]}" oninput="onInput(${i},this.value)">
+        <span class="marker mk-b" style="left:${bPos}%"></span>
+        <span class="marker mk-m" style="left:${mPos}%"></span>
+      </div>
+      <div class="hint">${f.tip}</div>`;
+    box.appendChild(d);
+  });
+  const lg=document.createElement('div'); lg.className='legend';
+  lg.innerHTML=`<span><i class="mk-b" style="background:var(--teal)"></i>typical benign</span>
+                <span><i class="mk-m" style="background:var(--coral)"></i>typical malignant</span>`;
+  box.appendChild(lg);
+  refresh();
+}
+function onInput(i,v){vals[i]=parseFloat(v);refresh();}
+function loadPreset(k){vals=PRESETS[k].slice();buildFields();
+  document.getElementById('log').className='log';
+  document.getElementById('log').textContent='No decision recorded yet.';}
+
+function refresh(){
+  MODEL.feats.forEach((f,i)=>{
+    document.getElementById('v'+i).textContent=vals[i].toFixed(f.scale<0.1?3:1);
+    const inp=document.querySelectorAll('#fields input')[i]; if(inp)inp.value=vals[i];
+  });
+  const {p,contribs}=predict();
+  // gauge
+  const ang=Math.PI*(1-p);                 // 0..pi from right to left? we want left=0
+  const a=Math.PI - Math.PI*p;             // p=0 -> pi (left/green), p=1 -> 0 (right/red)... invert
+  const theta=Math.PI*p;                   // 0=left,pi=right
+  const cx=120,cy=128,r=100;
+  const ex=cx - r*Math.cos(theta), ey=cy - r*Math.sin(theta);
+  const large=p>0.5?1:1;
+  document.getElementById('arc').setAttribute('d',`M20 128 A100 100 0 ${p>0.5?1:0} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`);
+  // needle
+  const nx=cx - 84*Math.cos(theta), ny=cy - 84*Math.sin(theta);
+  const nd=document.getElementById('needle');
+  nd.setAttribute('x2',nx.toFixed(1)); nd.setAttribute('y2',ny.toFixed(1));
+  let col=p<LOW?'#2a9d8f':(p>HIGH?'#e76f51':'#e9b949');
+  document.getElementById('arc').setAttribute('stroke',col);
+  nd.setAttribute('stroke',col);
+  // verdict
+  const vEl=document.getElementById('verdict'), fEl=document.getElementById('flag');
+  vEl.style.color=col;
+  document.getElementById('prob').textContent='Probability of malignancy: '+(p*100).toFixed(1)+'%';
+  if(p>=LOW && p<=HIGH){
+    vEl.textContent='UNCERTAIN'; fEl.className='band-flag show review';
+    fEl.innerHTML='<b>⚑ Refer for expert review</b>This case falls in the uncertain band ('+(LOW*100)+'–'+(HIGH*100)+'%), where the model is least reliable. A specialist should examine it directly.';
+  }else if(p>=THRESH){
+    vEl.textContent='MALIGNANT'; fEl.className='band-flag show clear-m';
+    fEl.innerHTML='<b>Flagged malignant</b>Probability exceeds the operating threshold ('+(THRESH*100)+'%). Confirm with pathology.';
+  }else{
+    vEl.textContent='BENIGN'; fEl.className='band-flag show clear-b';
+    fEl.innerHTML='<b>Assessed benign</b>Probability below the operating threshold ('+(THRESH*100)+'%). Routine follow-up.';
+  }
+  // contributions
+  const cont=document.getElementById('contribs'); cont.innerHTML='';
+  const maxAbs=Math.max(...contribs.map(Math.abs),0.5);
+  MODEL.feats.map((f,i)=>({f,c:contribs[i]})).sort((a,b)=>Math.abs(b.c)-Math.abs(a.c)).forEach(({f,c})=>{
+    const w=Math.min(Math.abs(c)/maxAbs*48,48);
+    const pos=c>=0;
+    const div=document.createElement('div'); div.className='contrib';
+    div.innerHTML=`<div class="crow"><span class="cname">${f.name}</span>
+        <span style="color:${pos?'#e76f51':'#2a9d8f'}">${pos?'↑ raises':'↓ lowers'} risk</span></div>
+      <div class="barbg"><span class="barzero"></span>
+        <span class="barfill" style="background:${pos?'#e76f51':'#2a9d8f'};
+          width:${w}%;left:${pos?50:50-w}%"></span></div>`;
+    cont.appendChild(div);
+  });
+}
+function confirmCase(){
+  const {p}=predict();
+  const l=document.getElementById('log'); l.className='log done';
+  l.textContent='✓ Logged: assessment confirmed by clinician at '+new Date().toLocaleTimeString()+' (p='+(p*100).toFixed(1)+'%).';
+}
+function override(toMalig){
+  const l=document.getElementById('log'); l.className='log done';
+  l.textContent='✓ Logged: clinician OVERRIDE → marked '+(toMalig?'MALIGNANT':'benign')+' at '+new Date().toLocaleTimeString()+'. Override recorded for audit.';
+}
+buildFields();
+</script>
+</body>
+</html>
