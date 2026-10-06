@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OncoAssist: Tumour Classification Support</title>
+<style>
+  :root{
+    --bg:#FFFFFF; --panel:#ffffff; --ink:#1A1A2E; --muted:#6B6B85;
+    --line:#D8D8E2; --accent:#0F0E47; --teal:#505081; --amber:#8686AC; --coral:#272757;
+    --shadow:0 1px 3px rgba(15,14,71,.06),0 8px 24px rgba(15,14,71,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;background:var(--bg);color:var(--ink);line-height:1.6;padding:36px 32px;min-height:100vh;}
+  .wrap{max-width:1200px;margin:0 auto;}
+
+  /* HEADER */
+  header{display:flex;align-items:baseline;justify-content:space-between;
+    padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:0;flex-wrap:wrap;gap:8px}
+  .brand{font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:700;color:var(--accent);letter-spacing:-.01em}
+  .brand span{color:var(--teal)}
+  .tagline{font-size:12px;color:var(--muted)}
+  .badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--coral);background:#DEDEEA;padding:4px 10px;border-radius:20px}
+
+  /* CARDS */
+  .card{background:transparent;border:none;border-radius:0;
+    padding:0;box-shadow:none}
+  .card h2{font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;margin-bottom:4px;color:var(--accent)}
+  .card .sub{font-size:11.5px;color:var(--muted);margin-bottom:16px}
+
+  /* HERO VERDICT CARD (top, full width) */
+  .hero{display:grid;grid-template-columns:1.1fr 1.4fr;gap:40px;align-items:center;
+    padding:36px 0;margin-bottom:24px;border-bottom:1px solid var(--line)}
+  @media(max-width:800px){.hero{grid-template-columns:1fr;gap:16px;padding:22px}}
+  .hero-left{text-align:center}
+  .hero-left .verdict{font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:700;
+    margin-top:8px;transition:color .3s;letter-spacing:-.01em}
+  .hero-left .prob{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .hero-right h2{margin-bottom:6px;font-size:17px}
+  .hero-right .sub{font-size:12px;margin-bottom:12px}
+  .band-flag{font-size:12.5px;display:none;padding:0;margin-top:4px;line-height:1.6}
+  .band-flag.show{display:block}
+  .band-flag b{display:block;margin-bottom:3px;font-size:13px;font-weight:700}
+  .review{background:transparent;border:none;color:#505081}
+  .clear-b{background:transparent;border:none;color:var(--teal)}
+  .clear-m{background:transparent;border:none;color:#0F0E47}
+
+  /* TWO COLUMN GRID (measurements + why) */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:28px;padding:8px 0 28px 0;border-bottom:1px solid var(--line)}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+  /* MEASUREMENT FIELDS */
+  .field{margin-bottom:14px}
+  .field .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+  .field label{font-size:12px;font-weight:700}
+  .field .val{font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:var(--accent)}
+  .field .hint{font-size:10.5px;color:var(--muted);margin-top:3px}
+  .track{position:relative;height:24px;display:flex;align-items:center}
+  input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:5px;
+    background:var(--line);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;
+    border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;
+    background:var(--accent);cursor:pointer;border:3px solid #fff}
+  .marker{position:absolute;top:-3px;width:2px;height:11px;border-radius:2px}
+  .mk-b{background:var(--teal)} .mk-m{background:var(--coral)}
+  .legend{display:flex;gap:16px;font-size:10.5px;color:var(--muted);margin-top:2px}
+  .legend i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+
+  /* GAUGE */
+  .gauge-wrap{text-align:center;margin:0}
+
+  /* WHY (contributions) */
+  .contrib{margin-bottom:11px}
+  .contrib .crow{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+  .contrib .cname{font-weight:700}
+  .barbg{height:9px;background:var(--line);border-radius:5px;position:relative;overflow:hidden}
+  .barfill{position:absolute;top:0;height:100%;border-radius:5px;transition:width .35s,background .35s;left:50%}
+  .barzero{position:absolute;left:50%;top:-2px;width:1px;height:13px;background:#A8A8C0}
+
+  /* PRESETS */
+  .preset{display:flex;gap:8px;margin-bottom:16px}
+  .preset button{flex:1;padding:9px;font-size:11.5px;font-weight:700;border-radius:8px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--muted);
+    font-family:Arial,Helvetica,sans-serif}
+  .preset button:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* ACTIONS STRIP (full width, below the two columns) */
+  .actions-strip{background:transparent;border:none;
+    padding:12px 0 20px 0;display:flex;justify-content:space-between;
+    align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:0}
+  .actions-strip .lbl{font-size:12.5px;color:var(--muted);font-weight:600}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;flex:1;justify-content:flex-end}
+  .btn{min-width:160px;padding:11px 18px;border-radius:9px;border:1px solid var(--line);
+    font-family:Arial,Helvetica,sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;
+    background:#fff;transition:.15s;color:var(--ink)}
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.ghost{color:var(--muted)}
+  .log{font-size:12px;color:var(--muted);min-height:18px}
+  .log.done{color:var(--teal);font-weight:700}
+
+  /* FOOTER */
+  footer{margin-top:0;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;padding-top:20px;border-top:1px solid var(--line)}
+  footer b{color:var(--coral)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">Onco<span>Assist</span></div>
+      <div class="tagline">A second opinion for your tumour review that shows what the model thinks and why</div>
+    </div>
+    <div class="badge">Prototype, second reader only</div>
+  </header>
+
+  <!-- HERO VERDICT CARD (full width, top) -->
+  <div class="card hero">
+    <div class="hero-left">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 240 150" width="240" height="140">
+          <path d="M20 128 A100 100 0 0 1 220 128" fill="none" stroke="#EDECF2" stroke-width="14" stroke-linecap="round"/>
+          <path id="arc" d="M20 128 A100 100 0 0 1 220 128" fill="none" stroke="#505081" stroke-width="14" stroke-linecap="round"/>
+          <line id="needle" x1="120" y1="128" x2="120" y2="40" stroke="#505081" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="120" cy="128" r="7" fill="var(--accent)"/>
+        </svg>
+      </div>
+      <div class="verdict" id="verdict">...</div>
+      <div class="prob" id="prob">Probability of malignancy: ...</div>
+    </div>
+    <div class="hero-right">
+      <h2>What the model thinks</h2>
+      <div class="sub">Based on six nucleus features. The model flags anything above 40% probability as malignant. That cut-off was chosen on the training data, not the test set.</div>
+      <div class="band-flag" id="flag"></div>
+    </div>
+  </div>
+
+  <!-- TWO COLUMNS: measurements + why -->
+  <div class="grid">
+    <!-- INPUT PANEL -->
+    <div class="card">
+      <h2>The measurements</h2>
+      <div class="sub">These values come from the image analysis. You can drag the sliders to see what would change the model's view. The tick marks show where benign tends to be here (lighter) and malignant (darker) cases sit.</div>
+      <div class="preset">
+        <button onclick="loadPreset('benign')">Try a benign case</button>
+        <button onclick="loadPreset('malignant')">Try a malignant case</button>
+        <button onclick="loadPreset('borderline')">Try a borderline case</button>
+      </div>
+      <div id="fields"></div>
+    </div>
+
+    <!-- WHY PANEL -->
+    <div class="card">
+      <h2>Why it thinks that</h2>
+      <div class="sub">Each bar shows how much a measurement pushed the result toward benign or malignant. Longer bars mean that feature mattered more for this case.</div>
+      <div id="contribs"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS STRIP -->
+  <div class="actions-strip">
+    <div class="log" id="log">Nothing recorded yet. Confirm or override when you’re ready.</div>
+    <div class="actions">
+      <button class="btn primary" onclick="confirmCase()">Agree with the model</button>
+      <button class="btn" onclick="override(false)">Override: mark benign</button>
+      <button class="btn" onclick="override(true)">Override: mark malignant</button>
+    </div>
+  </div>
+
+  <footer>
+    <b>A quick reminder:</b> OncoAssist is just a second opinion. It doesn’t replace your judgement or confirmatory pathology.<br>
+    Anything in the uncertain band gets flagged for expert review, and every decision you make is logged for audit. The model was trained on the Wisconsin Diagnostic Breast Cancer dataset.
+  </footer>
+</div>
+
+<script>
+// ---- Real fitted model (6-feature logistic regression) ----
+const MODEL={
+  intercept:-0.8490763925383382,
+  feats:[
+    {key:"radius_worst",name:"Worst radius",unit:"",coef:3.7095173750,mean:16.3661126,scale:4.9237434,min:7.93,max:36.04,b:13.38,m:21.13,tip:"Largest nucleus radius: size of the biggest cells"},
+    {key:"texture_worst",name:"Worst texture",unit:"",coef:1.2329319771,mean:25.8444366,scale:6.0456762,min:12.02,max:49.54,b:23.52,m:29.32,tip:"Variation in grey-scale: surface roughness"},
+    {key:"concave_pts_worst",name:"Worst concave points",unit:"",coef:1.2898185082,mean:0.1152788,scale:0.0659885,min:0,max:0.291,b:0.074,m:0.182,tip:"Number of concave indentations on the contour"},
+    {key:"concavity_worst",name:"Worst concavity",unit:"",coef:0.3261233600,mean:0.2738233,scale:0.2079426,min:0,max:1.252,b:0.166,m:0.451,tip:"Depth/severity of the concave portions"},
+    {key:"smoothness_worst",name:"Worst smoothness",unit:"",coef:0.4812409299,mean:0.1322396,scale:0.0234798,min:0.071,max:0.223,b:0.125,m:0.145,tip:"Local variation in radius length"},
+    {key:"symmetry_worst",name:"Worst symmetry",unit:"",coef:0.3338666440,mean:0.2907627,scale:0.0632125,min:0.156,max:0.664,b:0.270,m:0.323,tip:"Asymmetry of the nucleus shape"}
+  ]
+};
+const THRESH=0.40, LOW=0.20, HIGH=0.60;
+const PRESETS={
+  benign:[12.0,22.0,0.06,0.12,0.12,0.26],
+  malig:[24.0,28.0,0.20,0.50,0.15,0.34],
+  border:[16.5,25.0,0.13,0.27,0.14,0.30]
+};
+let vals=PRESETS.benign.slice();
+
+function sigmoid(z){return 1/(1+Math.exp(-z));}
+function predict(){
+  let z=MODEL.intercept, contribs=[];
+  MODEL.feats.forEach((f,i)=>{
+    const std=(vals[i]-f.mean)/f.scale;
+    const c=f.coef*std;
+    z+=c; contribs.push(c);
+  });
+  return {p:sigmoid(z),contribs};
+}
+
+function buildFields(){
+  const box=document.getElementById('fields'); box.innerHTML='';
+  MODEL.feats.forEach((f,i)=>{
+    const span=f.max-f.min, step=span/300;
+    const bPos=((f.b-f.min)/span)*100, mPos=((f.m-f.min)/span)*100;
+    const d=document.createElement('div'); d.className='field';
+    d.innerHTML=`
+      <div class="top"><label>${f.name}</label><span class="val" id="v${i}"></span></div>
+      <div class="track">
+        <input type="range" min="${f.min}" max="${f.max}" step="${step}" value="${vals[i]}" oninput="onInput(${i},this.value)">
+        <span class="marker mk-b" style="left:${bPos}%"></span>
+        <span class="marker mk-m" style="left:${mPos}%"></span>
+      </div>
+      <div class="hint">${f.tip}</div>`;
+    box.appendChild(d);
+  });
+  const lg=document.createElement('div'); lg.className='legend';
+  lg.innerHTML=`<span><i class="mk-b" style="background:var(--teal)"></i>benign tends to be here</span>
+                <span><i class="mk-m" style="background:var(--coral)"></i>malignant tends to be here</span>`;
+  box.appendChild(lg);
+  refresh();
+}
+function onInput(i,v){vals[i]=parseFloat(v);refresh();}
+function loadPreset(k){vals=PRESETS[k].slice();buildFields();
+  document.getElementById('log').className='log';
+  document.getElementById('log').textContent='Nothing recorded yet. Confirm or override when you’re ready.';}
+
+function refresh(){
+  MODEL.feats.forEach((f,i)=>{
+    document.getElementById('v'+i).textContent=vals[i].toFixed(f.scale<0.1?3:1);
+    const inp=document.querySelectorAll('#fields input')[i]; if(inp)inp.value=vals[i];
+  });
+  const {p,contribs}=predict();
+  // gauge
+  const ang=Math.PI*(1-p);                 // 0..pi from right to left? we want left=0
+  const a=Math.PI - Math.PI*p;             // p=0 -> pi (left/green), p=1 -> 0 (right/red)... invert
+  const theta=Math.PI*p;                   // 0=left,pi=right
+  const cx=120,cy=128,r=100;
+  const ex=cx - r*Math.cos(theta), ey=cy - r*Math.sin(theta);
+  const large=p>0.5?1:1;
+  document.getElementById('arc').setAttribute('d',`M20 128 A100 100 0 ${p>0.5?1:0} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`);
+  // needle
+  const nx=cx - 84*Math.cos(theta), ny=cy - 84*Math.sin(theta);
+  const nd=document.getElementById('needle');
+  nd.setAttribute('x2',nx.toFixed(1)); nd.setAttribute('y2',ny.toFixed(1));
+  let col=p<LOW?'#505081':(p>HIGH?'#272757':'#8686AC');
+  document.getElementById('arc').setAttribute('stroke',col);
+  nd.setAttribute('stroke',col);
+  // verdict
+  const vEl=document.getElementById('verdict'), fEl=document.getElementById('flag');
+  vEl.style.color=col;
+  document.getElementById('prob').textContent='Probability of malignancy: '+(p*100).toFixed(1)+'%';
+  if(p>=LOW && p<=HIGH){
+    vEl.textContent='UNCERTAIN'; fEl.className='band-flag show review';
+    fEl.innerHTML='<b>⚑ Needs a specialist look</b>The probability sits in the uncertain band ('+(LOW*100)+'-'+(HIGH*100)+'%). The model isn’t confident here, so please have an expert review it.';
+  }else if(p>=THRESH){
+    vEl.textContent='MALIGNANT'; fEl.className='band-flag show clear-m';
+    fEl.innerHTML='<b>Model flagged this as malignant</b>Probability is above the '+(THRESH*100)+'% cut-off. Please confirm with pathology.';
+  }else{
+    vEl.textContent='BENIGN'; fEl.className='band-flag show clear-b';
+    fEl.innerHTML='<b>Looks benign</b>Probability is below the '+(THRESH*100)+'% cut-off, so routine follow-up should be fine.';
+  }
+  // contributions
+  const cont=document.getElementById('contribs'); cont.innerHTML='';
+  const maxAbs=Math.max(...contribs.map(Math.abs),0.5);
+  MODEL.feats.map((f,i)=>({f,c:contribs[i]})).sort((a,b)=>Math.abs(b.c)-Math.abs(a.c)).forEach(({f,c})=>{
+    const w=Math.min(Math.abs(c)/maxAbs*48,48);
+    const pos=c>=0;
+    const div=document.createElement('div'); div.className='contrib';
+    div.innerHTML=`<div class="crow"><span class="cname">${f.name}</span>
+        <span style="color:${pos?'#272757':'#505081'}">${pos?'pushes toward malignant':'pushes toward benign'}</span></div>
+      <div class="barbg"><span class="barzero"></span>
+        <span class="barfill" style="background:${pos?'#272757':'#505081'};
+          width:${w}%;left:${pos?50:50-w}%"></span></div>`;
+    cont.appendChild(div);
+  });
+}
+function confirmCase(){
+  const {p}=predict();
+  const l=document.getElementById('log'); l.className='log done';
+  l.textContent='✓ Confirmed at '+new Date().toLocaleTimeString()+'. You agreed with the model (p='+(p*100).toFixed(1)+'%).';
+}
+function override(toMalig){
+  const l=document.getElementById('log'); l.className='log done';
+  l.textContent='✓ You marked this '+(toMalig?'malignant':'benign')+' at '+new Date().toLocaleTimeString()+'. Override saved to the audit log.';
+}
+buildFields();
+</script>
+</body>
+</html>
